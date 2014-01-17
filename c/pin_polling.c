@@ -42,8 +42,7 @@ bool_t getCircuitState(){
 
 # ifdef DEBUG
 #  ifndef DAEMON
-        //printDoorState(&door);
-        //printf("level: %d\n", level);
+        printDoorState(&door);
 #  else
 #  endif
 # endif
@@ -58,9 +57,7 @@ bool_t getCircuitState(){
             memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
             pthread_mutex_unlock(&g_messageMutex);
 
-            pthread_mutex_lock(&g_messageReadyFlagMutex);
-            g_NewMessageReady = TRUE;
-            pthread_mutex_unlock(&g_messageReadyFlagMutex);
+            sendMessage();
 # ifdef DAEMON
 # else
             printf("JSON: %s\n", msg.message);
@@ -78,9 +75,7 @@ bool_t getCircuitState(){
             memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
             pthread_mutex_unlock(&g_messageMutex);
 
-            pthread_mutex_lock(&g_messageReadyFlagMutex);
-            g_NewMessageReady = TRUE;
-            pthread_mutex_unlock(&g_messageReadyFlagMutex);
+            sendMessage();
 # ifdef DAEMON
 # else
            printf("JSON: %s\n", msg.message);

@@ -19,7 +19,7 @@ static pthread_mutex_t endThreadFlagMutex;
 
 /*Local function call prototypes*/
 static void* socketWorker(void* threadID);
-
+static bool_t createTCPconnection(int *sockFd, char* ip, int port);
 /**
  * @brief createConnection
  * This will create a socket connection to a running server.
@@ -138,4 +138,32 @@ void* socketWorker(void *threadID){
 
     pthread_exit(NULL);
 }
+
+static bool_t createTCPconnection(int *sockFd, char* ip, int port){
+
+	if(*sockFd = socket(AF_LOCAL, SOCK_STREAM,  ) != 0){
+#ifdef DAEMON
+		//syslog here
+#else
+		perror("Error while initializing socket for TCP connection: ");
+#endif
+		return FALSE;
+	}
+
+	//Bind here
+	if( bind(*sockFd,/*Args here*/) != 0){
+#ifdef DAEMON
+		//syslog here
+#else
+		perror("Error while binding socket to address credentials: ");
+#endif
+		return FALSE;
+	}
+
+	//Open here
+		
+	return TRUE;
+}
+
+
 

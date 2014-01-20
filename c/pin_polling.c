@@ -174,7 +174,7 @@ bool_t getCircuitState(){
             goto ERROR;
         }
 
-        //usleep(SLEEP);
+        usleep(SLEEP);
     }
 
     if( tcsetattr(POSIX_STDIN, TCSANOW, &old_termio) != 0)

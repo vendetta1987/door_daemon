@@ -1,5 +1,5 @@
 #include "pin_polling.h"
-#include "tcp_socket.h"
+#include "data_socket.h"
 #include "app_utils.h"
 #include "app_includes.h"
 
@@ -69,30 +69,23 @@ bool_t getCircuitState(){
 
             sendMessage();
 
-//# ifdef DAEMON
-//# else
-//            printf("JSON: %s\n", msg.message);
-//# endif
             debug(DBG, "JSON: %s\n", msg.message);
 
             free(pTime);
 
         }else if( level == 0 && door == CLOSED){
 
-            door = OPEN;
-            getParsableTime(door, &pTime);
-            strcpy(msg.message, pTime);
-            msg.msg_size = strlen(msg.message);
+           door = OPEN;
+           getParsableTime(door, &pTime);
+           strcpy(msg.message, pTime);
+           msg.msg_size = strlen(msg.message);
 
-            pthread_mutex_lock(&g_messageMutex);
-            memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
-            pthread_mutex_unlock(&g_messageMutex);
+           pthread_mutex_lock(&g_messageMutex);
+           memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
+           pthread_mutex_unlock(&g_messageMutex);
 
-            sendMessage();
-//# ifdef DAEMON
-//# else
-//            printf("JSON: %s\n", msg.message);
-//# endif
+           sendMessage();
+
            debug(DBG, "JSON: %s\n", msg.message);
            free(pTime);
         }
@@ -164,10 +157,6 @@ bool_t getCircuitState(){
 
             sendMessage();
 
-//# ifdef DAEMON
-//# else
-//            printf("JSON: %s\n", msg.message);
-//# endif
             debug(DBG, "JSON: %s\n", msg.message);
 
             free(pTime);
@@ -187,10 +176,6 @@ bool_t getCircuitState(){
 
             sendMessage();
 
-//# ifdef DAEMON
-//# else
-//            printf("JSON: %s\n", msg.message);
-//# endif
             debug(DBG, "JSON: %s\n", msg.message);
 
             free(pTime);

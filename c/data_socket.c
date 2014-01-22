@@ -1,4 +1,4 @@
-#include "tcp_socket.h"
+#include "data_socket.h"
 #include "app_utils.h"
 #include "app_includes.h"
 
@@ -22,6 +22,8 @@ static pthread_mutex_t endThreadFlagMutex;
 /*Local function call prototypes*/
 static void* socketWorker(void* threadID);
 static bool_t createUNSocketConnection(int *sockFd);
+static bool_t transmitViaUNSocketConnection(int *sockFd, sock_message_t* msg);
+static bool_t closeUNSocketConnection(int *sockFd);
 
 /**
  * @brief createConnection
@@ -90,18 +92,16 @@ bool_t sendMessage(){
 
 void* socketWorker(void *threadID){
 
-    bool_t end = FALSE;
+    bool_t end          = FALSE;
     bool_t messageReady = FALSE;
     sock_message_t thread_msg;
-    long tid = (long)threadID;
+    long tid            = (long)threadID;
+    int socketFD        = 0;
 
-//#ifdef DEBUG
-//#   ifdef DAEMON
-//    //syslog here
-//#   else
-//    printf("Thread with ID %ld started!\n", tid);
-//#   endif
-//#endif
+    if( !createUNSocketConnection(&socketFD) ){
+        debug(FTL, "%s\n", "Socket related error, ending thread!");
+        end = TRUE;
+    }
 
     debug(DBG, "Thread with ID %ld started!\n", tid);
 
@@ -119,13 +119,13 @@ void* socketWorker(void *threadID){
             pthread_mutex_lock(&g_messageReadyFlagMutex);
             g_NewMessageReady = FALSE;
             pthread_mutex_unlock(&g_messageReadyFlagMutex);
-//#ifdef DEBUG
-//#   ifdef DAEMON
-//    //syslog here
-//#   else
-//            printf("Thread received new message: %s\n", thread_msg.message);
-//#   endif
-//#endif
+
+            if( !transmitViaUNSocketConnection(&socketFD, &thread_msg) ){
+                debug(FTL, "%s\n", "Socket related error, ending thread!");
+                end = TRUE;
+                pthread_exit(NULL);
+            }
+
             debug(DBG, "Thread received new message: %s\n", thread_msg.message);
 
         }
@@ -135,39 +135,57 @@ void* socketWorker(void *threadID){
         pthread_mutex_unlock(&endThreadFlagMutex);
     }
 
-//#ifdef DEBUG
-//#   ifdef DAEMON
-//    //syslog here
-//#   else
-//    printf("Thread with ID %ld shutting down!\n", tid);
-//#   endif
-//#endif
-
     debug(DBG, "Thread with ID %ld shutting down!\n", tid);
+
+    if( !closeUNSocketConnection(&socketFD) ){
+        debug(FTL, "%s\n", "Socket related error, ending thread!");
+    }
 
     pthread_exit(NULL);
 }
 
 static bool_t createUNSocketConnection(int *sockFd){
 
-    struct sockaddr_un  address;
-    int                 size;
-    char*               pBuff = malloc(1024);
+    struct sockaddr_un address;
 
     if( (*sockFd = socket(PF_LOCAL, SOCK_STREAM, 0)) < 1){
-//#ifdef DAEMON
-//		//syslog here
-//#else
-//        perror("Error while initializing socket for UNIX Domain Socket connection: ");
-//#endif
         debug(FTL, "%s", "Error while initializing socket for UNIX Domain Socket connection!");
 		return FALSE;
 	}
 
-	//Open here
+    address.sun_family = AF_LOCAL;
+    strcpy(address.sun_path, COM_SOCKET);
+
+    if( connect(*sockFd, (struct sockaddr*) &address, sizeof(address)) != 0 ){
+        debug(FTL, "%s", "Error while connecting to server!");
+        return FALSE;
+    }
+
+    debug(DBG, "%s\n", "Connection with Python string server established!");
 		
 	return TRUE;
 }
 
+static bool_t transmitViaUNSocketConnection(int* sockFd, sock_message_t* msg){
 
+    if(send(*Fd, msg.message, msg.msg_size, 0) == -1){
+        debug(FTL, "%s\n", "Error while sending message to server!");
+        return FALSE;
+    }
 
+    debug(DBG, "%s\n", "Message sent to server!");
+
+    return TRUE;
+}
+
+static bool_t closeUNSocketConnection(int *sockFd){
+
+    if( close(*sockFd) != 0 ){
+        debug(FTL, "%s\n", "Error while closing socket connection!");
+        return FALSE;
+    }
+
+    debug(DBG, "%s\n", "Socket to server closed!");
+
+    return TRUE;
+}

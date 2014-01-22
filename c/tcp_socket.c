@@ -1,12 +1,14 @@
 #include "tcp_socket.h"
+#include "app_utils.h"
+#include "app_includes.h"
 
-#include <fcntl.h>
 #include <sys/types.h>
-#include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
-#include <stdio.h>
-#include <string.h>
 
 //Flag which denotes if a new message is ready to be sent
 bool_t g_NewMessageReady = FALSE;
@@ -19,7 +21,8 @@ static pthread_mutex_t endThreadFlagMutex;
 
 /*Local function call prototypes*/
 static void* socketWorker(void* threadID);
-static bool_t createTCPconnection(int *sockFd, char* ip, int port);
+static bool_t createUNSocketConnection(int *sockFd);
+
 /**
  * @brief createConnection
  * This will create a socket connection to a running server.
@@ -92,13 +95,15 @@ void* socketWorker(void *threadID){
     sock_message_t thread_msg;
     long tid = (long)threadID;
 
-#ifdef DEBUG
-#   ifdef DAEMON
-    //syslog here
-#   else
-    printf("Thread with ID %ld started!\n", tid);
-#   endif
-#endif
+//#ifdef DEBUG
+//#   ifdef DAEMON
+//    //syslog here
+//#   else
+//    printf("Thread with ID %ld started!\n", tid);
+//#   endif
+//#endif
+
+    debug(DBG, "Thread with ID %ld started!\n", tid);
 
     while(end != TRUE){
 
@@ -114,13 +119,15 @@ void* socketWorker(void *threadID){
             pthread_mutex_lock(&g_messageReadyFlagMutex);
             g_NewMessageReady = FALSE;
             pthread_mutex_unlock(&g_messageReadyFlagMutex);
-#ifdef DEBUG
-#   ifdef DAEMON
-    //syslog here
-#   else
-            printf("Thread received new message: %s\n", thread_msg.message);
-#   endif
-#endif
+//#ifdef DEBUG
+//#   ifdef DAEMON
+//    //syslog here
+//#   else
+//            printf("Thread received new message: %s\n", thread_msg.message);
+//#   endif
+//#endif
+            debug(DBG, "Thread received new message: %s\n", thread_msg.message);
+
         }
 
         pthread_mutex_lock(&endThreadFlagMutex);
@@ -128,35 +135,32 @@ void* socketWorker(void *threadID){
         pthread_mutex_unlock(&endThreadFlagMutex);
     }
 
-#ifdef DEBUG
-#   ifdef DAEMON
-    //syslog here
-#   else
-    printf("Thread with ID %ld shutting down!\n", tid);
-#   endif
-#endif
+//#ifdef DEBUG
+//#   ifdef DAEMON
+//    //syslog here
+//#   else
+//    printf("Thread with ID %ld shutting down!\n", tid);
+//#   endif
+//#endif
+
+    debug(DBG, "Thread with ID %ld shutting down!\n", tid);
 
     pthread_exit(NULL);
 }
 
-static bool_t createTCPconnection(int *sockFd, char* ip, int port){
+static bool_t createUNSocketConnection(int *sockFd){
 
-	if(*sockFd = socket(AF_LOCAL, SOCK_STREAM,  ) != 0){
-#ifdef DAEMON
-		//syslog here
-#else
-		perror("Error while initializing socket for TCP connection: ");
-#endif
-		return FALSE;
-	}
+    struct sockaddr_un  address;
+    int                 size;
+    char*               pBuff = malloc(1024);
 
-	//Bind here
-	if( bind(*sockFd,/*Args here*/) != 0){
-#ifdef DAEMON
-		//syslog here
-#else
-		perror("Error while binding socket to address credentials: ");
-#endif
+    if( (*sockFd = socket(PF_LOCAL, SOCK_STREAM, 0)) < 1){
+//#ifdef DAEMON
+//		//syslog here
+//#else
+//        perror("Error while initializing socket for UNIX Domain Socket connection: ");
+//#endif
+        debug(FTL, "%s", "Error while initializing socket for UNIX Domain Socket connection!");
 		return FALSE;
 	}
 

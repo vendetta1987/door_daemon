@@ -1,7 +1,7 @@
 #ifndef APP_TYPES_H
 #define APP_TYPES_H
 
-#include <stdlib.h>
+#include "app_includes.h"
 
 #define JSON_STRING_LENGTH 60
 

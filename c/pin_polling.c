@@ -1,5 +1,15 @@
 #include "pin_polling.h"
 #include "tcp_socket.h"
+#include "app_utils.h"
+#include "app_includes.h"
+
+#include <time.h>
+
+#include <unistd.h>
+#include <poll.h>
+#include <signal.h>
+#include <termios.h>
+#include <sys/ioctl.h>
 
 extern bool_t g_NewMessageReady;
 
@@ -58,10 +68,13 @@ bool_t getCircuitState(){
             pthread_mutex_unlock(&g_messageMutex);
 
             sendMessage();
-# ifdef DAEMON
-# else
-            printf("JSON: %s\n", msg.message);
-# endif
+
+//# ifdef DAEMON
+//# else
+//            printf("JSON: %s\n", msg.message);
+//# endif
+            debug(DBG, "JSON: %s\n", msg.message);
+
             free(pTime);
 
         }else if( level == 0 && door == CLOSED){
@@ -76,10 +89,11 @@ bool_t getCircuitState(){
             pthread_mutex_unlock(&g_messageMutex);
 
             sendMessage();
-# ifdef DAEMON
-# else
-           printf("JSON: %s\n", msg.message);
-# endif
+//# ifdef DAEMON
+//# else
+//            printf("JSON: %s\n", msg.message);
+//# endif
+           debug(DBG, "JSON: %s\n", msg.message);
            free(pTime);
         }
 
@@ -137,32 +151,49 @@ bool_t getCircuitState(){
 
         ret = poll(pfd, 1, 1000);
 
-# ifdef DEBUG
-#  ifndef DAEMON
-        printDoorState(&door);
-        printf("Ret: %d\n", ret);
-#  else
-#  endif
-# endif
-
         if(ret > 0 && door == OPEN){
 
             door = CLOSED;
-# ifndef DAEMON
-            printf("Door open!\n");
-# else
-            //Syslog here
-# endif
+            getParsableTime(door, &pTime);
+            strcpy(msg.message, pTime);
+            msg.msg_size = strlen(msg.message);
+
+            pthread_mutex_lock(&g_messageMutex);
+            memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
+            pthread_mutex_unlock(&g_messageMutex);
+
+            sendMessage();
+
+//# ifdef DAEMON
+//# else
+//            printf("JSON: %s\n", msg.message);
+//# endif
+            debug(DBG, "JSON: %s\n", msg.message);
+
+            free(pTime);
+
             read(POSIX_STDIN, &c, 1);
 
         }else if(ret == 0 && door == CLOSED){
 
             door = OPEN;
-# ifndef DAEMON
-            printf("Door closed!\n");
-# else
-            //Syslog here
-# endif
+            getParsableTime(door, &pTime);
+            strcpy(msg.message, pTime);
+            msg.msg_size = strlen(msg.message);
+
+            pthread_mutex_lock(&g_messageMutex);
+            memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
+            pthread_mutex_unlock(&g_messageMutex);
+
+            sendMessage();
+
+//# ifdef DAEMON
+//# else
+//            printf("JSON: %s\n", msg.message);
+//# endif
+            debug(DBG, "JSON: %s\n", msg.message);
+
+            free(pTime);
 
         }else if(ret == -1){
 
@@ -183,12 +214,7 @@ bool_t getCircuitState(){
     return TRUE;
 
 ERROR:
-# ifndef DAEMON
-    perror("pin_polling.c");
-# else
-    //Syslog here
-    //here closelog
-# endif
+    debug(FTL, "%s\n", "Something fatal happened :(");
     return FALSE;
 #endif
 }
@@ -225,10 +251,10 @@ void sighandler(int signo){
 void printDoorState(doorState_t* state){
     switch(*state){
     case OPEN:
-        printf("State: Open\n");
+        debug(DBG, "%s", "State: Open\n");
         break;
     case CLOSED:
-        printf("State: Closed\n");
+        debug(DBG, "%s", "State: Closed\n");
         break;
     }
 }

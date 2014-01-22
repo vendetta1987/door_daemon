@@ -5,14 +5,15 @@
 
 #include <pthread.h>
 
-#define SERVER_IP "127.0.0.1"
-#define PORT 20000
+#define COM_SOCKET "/tmp/door_daemon_data_socket"
 
 //List of available mutexes for use in main and socket thread
 pthread_mutex_t g_messageMutex;
 pthread_mutex_t g_messageReadyFlagMutex;
+
 //Message struct which is used to exchange messages between threads
 sock_message_t g_ClientMessage;
+
 //Flag which denotes if a new message is ready to be sent
 //bool_t g_NewMessageReady = FALSE;
 

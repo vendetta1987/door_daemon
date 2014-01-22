@@ -168,7 +168,7 @@ static bool_t createUNSocketConnection(int *sockFd){
 
 static bool_t transmitViaUNSocketConnection(int* sockFd, sock_message_t* msg){
 
-    if(send(*Fd, msg.message, msg.msg_size, 0) == -1){
+    if(send(*sockFd, msg->message, msg->msg_size, 0) == -1){
         debug(FTL, "%s\n", "Error while sending message to server!");
         return FALSE;
     }

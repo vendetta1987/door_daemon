@@ -1,12 +1,12 @@
 //Compiling commands
 //For normal use:
-//gcc main.c pin_polling.c tcp_socket.c -pthread -DDEBUG -std=gnu99 -Wall -g -o NAME
+//gcc main.c pin_polling.c data_socket.c -pthread -DDEBUG -std=gnu99 -Wall -g -o NAME
 //For use as daemon:
-//gcc main.c pin_polling.c tcp_socket.c -pthread -DDEBUG -DDAEMON -std=gnu99 -Wall -g -o NAME
+//gcc main.c pin_polling.c data_socket.c -pthread -DDEBUG -DDAEMON -std=gnu99 -Wall -g -o NAME
 //For normal use on Raspberry Pi
-//gcc main.c pin_polling.c tcp_socket.c -pthread -DDEBUG -DRPI -std=gnu99 -Wall -g -o NAME
+//gcc main.c pin_polling.c data_socket.c -pthread -DDEBUG -DRPI -std=gnu99 -Wall -g -o NAME
 //For daemon use on Raspberry Pi
-//gcc main.c pin_polling.c tcp_socket.c -pthread -DDEBUG -DRPI -DDAEMON -std=gnu99 -Wall -g -o NAME
+//gcc main.c pin_polling.c data_socket.c -pthread -DDEBUG -DRPI -DDAEMON -std=gnu99 -Wall -g -o NAME
 
 #include "pin_polling.h"
 #include "app_utils.h"

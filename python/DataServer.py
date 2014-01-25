@@ -4,10 +4,13 @@ import socket
 import sys
 import os
 
+import SimpleFileWriter
+
 class data_server(object):
     m_SocketPath = 0
     m_Socket = 0
     m_pathSet = False
+    m_FileWriter = SimpleFileWriter.simpleFileWriter()
 
     def __init__(self):
         pass

@@ -5,13 +5,19 @@
 
 #include <time.h>
 
+#ifdef RPI
+
+#include <wiringPi.h>
+
+#else
+
 #include <unistd.h>
 #include <poll.h>
 #include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>
 
-extern bool_t g_NewMessageReady;
+#endif
 
 /*Door state type*/
 typedef enum{
@@ -97,6 +103,7 @@ bool_t getCircuitState(){
 #endif
     return TRUE;
 #else //Running on normal Linux
+
     struct termios old_termio;
     struct termios new_termio;
 

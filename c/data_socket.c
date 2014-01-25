@@ -11,7 +11,7 @@
 
 
 //Flag which denotes if a new message is ready to be sent
-bool_t g_NewMessageReady = FALSE;
+static bool_t g_NewMessageReady = FALSE;
 
 //Flag which denotes if the thread shall continue
 static bool_t endThread = FALSE;

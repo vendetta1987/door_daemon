@@ -5,8 +5,6 @@
 #define SLEEP 300
 #define DEFAULT_PIN 0
 
-#include <wiringPi.h>
-
 #else
 
 #define SLEEP 50000

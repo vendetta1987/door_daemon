@@ -15,6 +15,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef PIN_POLLING_H
+#define PIN_POLLING_H
+
 #include "app_types.h"
 
 #ifdef RPI
@@ -40,3 +43,5 @@ bool_t setPinReadMode(int pin);
 
 //Set pin to write mode
 bool_t setPinWriteMode(int pin);
+
+#endif //PIN_POLLING_H

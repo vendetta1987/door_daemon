@@ -25,14 +25,26 @@
 //For daemon use on Raspberry Pi
 //gcc main.c pin_polling.c data_socket.c -pthread -lwiringPi -DDEBUG -DRPI -DDAEMON -std=gnu99 -Wall -g -o NAME
 
+#ifdef DAEMON
+#include <fcntl.h>
+#include <signal.h>
+#include <unistd.h>
+#endif
+
 #include "pin_polling.h"
 #include "app_utils.h"
+
+#define LOCK_FILE "doord.lock"
+#define RUNNING_DIR "/tmp/"
+
+static void daemonize();
+static void sigHandler(int event);
 
 int main(int argc, char** argv){
 
     gLogLevel = DBG;
 
-#ifdef DEBUG
+#ifdef DEBUG && DAEMON
     START_LOGGING("door_daemon", LOG_PID, LOG_LOCAL0);
 #endif
 
@@ -40,13 +52,92 @@ int main(int argc, char** argv){
 
     initIO();
     setPinReadMode(0);
+
+#ifdef DAEMON && RPI
+    daemonize();
+#endif
+
     int ret = getCircuitState();
 
     debug(DBG, "%s\n", "Stopping Door Daemon C program component...");
 
-#ifdef DEBUG
+#ifdef DEBUG && DAEMON
     STOP_LOGGING();
 #endif
 
     return  ret ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+static void daemonize(){
+
+    // Check if process instance
+    // is a daemon already
+    if(getppid() == 1){
+        debug(DBG, "%s\n", "Already a daemon...aborting");
+        return;
+    }
+
+    int pid = 0;
+
+    switch(pid = fork()){
+    case 0:         //Child
+    {
+        setsid(); //Get new process group
+
+        int idx = getdtablesize();
+
+        for(; idx >= 0; --idx)
+            close(idx);
+
+        idx = open("/dev/null", O_RDWR);//0 - stdout
+        dup(idx);                       //1 - stdin
+        dup(idx);                       //2 - stderr
+
+        umask(027);
+
+        chdir(RUNNING_DIR);
+
+        int fd_lock = open(LOCK_FILE, O_RDWR|O_CREAT, 0640);
+
+        //handle open() errors...
+
+        if(fd_lock < 0)
+            exit(EXIT_FAILURE);
+
+        if( lockf(fd_lock, F_TLOCK, 0) < 0 )
+            exit(EXIT_SUCCESS);
+
+        //Ignore following signals
+        signal(SIGCHLD, SIG_IGN);
+        signal(SIGTSTP, SIG_IGN);
+        signal(SIGTTIN, SIG_IGN);
+        signal(SIGTTOU, SIG_IGN);
+
+        //Handle following signals
+        signal(SIGHUP, sigHandler);
+        signal(SIGTERM, sigHandler);
+    }
+        break;
+    case -1:        //Error
+        debug(FTL, "%s", "Error while daemonizing process!");
+        exit(EXIT_FAILURE);
+        break;
+    default:        //Parent
+        exit(EXIT_SUCCESS);
+        break;
+
+    }
+}
+
+static void sigHandler(int event){
+    switch(event){
+    case SIGHUP:
+        debug(DBG, "%s\n", "Received SIGHUP signal!");
+        break;
+    case SIGTERM:
+        debug(FTL, "%s\n", "Received SIGTERM signal!");
+        //end thread here, disconnect from socket...
+        exit(EXIT_SUCCESS);
+        break;
+    }
 }

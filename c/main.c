@@ -29,45 +29,47 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
-#endif
-
-#include "pin_polling.h"
-#include "app_utils.h"
 
 #define LOCK_FILE "doord.lock"
 #define RUNNING_DIR "/tmp/"
 
 static void daemonize();
 static void sigHandler(int event);
+#endif
+
+#include "pin_polling.h"
+#include "app_utils.h"
 
 int main(int argc, char** argv){
 
     gLogLevel = DBG;
 
-#ifdef DEBUG && DAEMON
+#if defined(DEBUG) && defined(DAEMON)
     START_LOGGING("door_daemon", LOG_PID, LOG_LOCAL0);
 #endif
 
     debug(DBG, "%s\n", "Starting Door Daemon C program component...");
 
+#ifdef RPI
     initIO();
     setPinReadMode(0);
-
-#ifdef DAEMON && RPI
+#ifdef DAEMON
     daemonize();
+#endif
 #endif
 
     int ret = getCircuitState();
 
     debug(DBG, "%s\n", "Stopping Door Daemon C program component...");
 
-#ifdef DEBUG && DAEMON
+#if defined(DEBUG) && defined(DAEMON)
     STOP_LOGGING();
 #endif
 
     return  ret ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
+#ifdef DAEMON
 static void daemonize(){
 
     // Check if process instance
@@ -141,3 +143,4 @@ static void sigHandler(int event){
         break;
     }
 }
+#endif

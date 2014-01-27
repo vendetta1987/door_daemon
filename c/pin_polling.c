@@ -36,6 +36,9 @@
 
 #endif
 
+#define CON_RETRIES_COM_THREAD 5
+#define CON_RETRIES_WAIT_PERIOD 1000000
+
 /*Door state type*/
 typedef enum{
     OPEN 			= 0,
@@ -55,21 +58,41 @@ static void sighandler(int signo);
 /*General Prototypes*/
 static void printDoorState(doorState_t *state);
 static void getParsableTime(doorState_t state, char **pTime);
+static void triggerEventMessage(doorState_t *state);
 
 bool_t getCircuitState(){
 
-#ifdef DAEMON
-    //Here Openlog
-#endif
-
     createConnection();
 
+    /*
+     * This is done to ensure
+     * that the socket thread is running
+     * before messages are passed to the thread.
+     * If the socket could not be established,
+     * it will poll CON_RETRIES_COM_THREAD times/seconds
+     * before returning.
+     */
+    int retries = 0;
+
+    while( !socketThreadRunning() ){
+
+        if( retries < CON_RETRIES_COM_THREAD ){
+            debug(FTL, "Communication thread is not running, waiting %d more seconds...\n", (CON_RETRIES_COM_THREAD - (retries)));
+            usleep(CON_RETRIES_WAIT_PERIOD);
+        }else if(retries == CON_RETRIES_COM_THREAD){
+            debug(FTL, "%s\n", "Communication thread is not responding...abort!");
+            return FALSE;
+        }
+
+        ++retries;
+    }
+
+    debug(DBG, "%s\n", "Starting hardware polling loop...");
+
     doorState_t door = OPEN;
-    sock_message_t msg;
-    char* pTime = 0;
 
 #ifdef RPI //Running on Raspberry Pi
-    while(1){
+    while(socketThreadRunning()){
 
         int level = digitalRead(DEFAULT_PIN);
 
@@ -82,42 +105,17 @@ bool_t getCircuitState(){
         if( level == 1 && door == OPEN){
 
             door = CLOSED;
-            getParsableTime(door, &pTime);
-            strcpy(msg.message, pTime);
-            msg.msg_size = strlen(msg.message);
-
-            pthread_mutex_lock(&g_messageMutex);
-            memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
-            pthread_mutex_unlock(&g_messageMutex);
-
-            sendMessage();
-
-            debug(DBG, "JSON: %s\n", msg.message);
-
-            free(pTime);
+            triggerEventMessage(&door);
 
         }else if( level == 0 && door == CLOSED){
 
            door = OPEN;
-           getParsableTime(door, &pTime);
-           strcpy(msg.message, pTime);
-           msg.msg_size = strlen(msg.message);
-
-           pthread_mutex_lock(&g_messageMutex);
-           memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
-           pthread_mutex_unlock(&g_messageMutex);
-
-           sendMessage();
-
-           debug(DBG, "JSON: %s\n", msg.message);
-           free(pTime);
+           triggerEventMessage(&door);
         }
 
         delay(SLEEP);
     }
-#ifdef DAEMON
-    //Here closelog
-#endif
+
     return TRUE;
 #else //Running on normal Linux
 
@@ -157,7 +155,7 @@ bool_t getCircuitState(){
     if( tcsetattr(POSIX_STDIN, TCSANOW, &new_termio) != 0)
         goto ERROR;
 
-    while(!end){
+    while(!end && socketThreadRunning()){
 
         struct pollfd pfd[1];
         int ret = 0;
@@ -171,38 +169,13 @@ bool_t getCircuitState(){
         if(ret > 0 && door == OPEN){
 
             door = CLOSED;
-            getParsableTime(door, &pTime);
-            strcpy(msg.message, pTime);
-            msg.msg_size = strlen(msg.message);
-
-            pthread_mutex_lock(&g_messageMutex);
-            memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
-            pthread_mutex_unlock(&g_messageMutex);
-
-            sendMessage();
-
-            debug(DBG, "JSON: %s\n", msg.message);
-
-            free(pTime);
-
+            triggerEventMessage(&door);
             read(POSIX_STDIN, &c, 1);
 
         }else if(ret == 0 && door == CLOSED){
 
             door = OPEN;
-            getParsableTime(door, &pTime);
-            strcpy(msg.message, pTime);
-            msg.msg_size = strlen(msg.message);
-
-            pthread_mutex_lock(&g_messageMutex);
-            memcpy(&g_ClientMessage, &msg, sizeof(sock_message_t));
-            pthread_mutex_unlock(&g_messageMutex);
-
-            sendMessage();
-
-            debug(DBG, "JSON: %s\n", msg.message);
-
-            free(pTime);
+            triggerEventMessage(&door);
 
         }else if(ret == -1){
 
@@ -228,33 +201,25 @@ ERROR:
 #endif
 }
 
-bool_t initIO(){
 #ifdef RPI
+bool_t initIO(){
     wiringPiSetup();
-#endif
     return TRUE;
 }
 
 bool_t setPinReadMode(int pin){
-#ifdef RPI
     pinMode(pin, INPUT);
-#endif
     return TRUE;
 }
 
 bool_t setPinWriteMode(int pin){
-#ifdef RPI
     pinMode(pin, OUTPUT);
-#endif
     return TRUE;
 }
-
-#ifndef RPI
-
+#else
 void sighandler(int signo){
     end = 1;
 }
-
 #endif
 
 void printDoorState(doorState_t* state){
@@ -297,4 +262,13 @@ void getParsableTime(doorState_t state, char** pTime){
              pTimeInfo);
     break;
     }
+}
+
+static void triggerEventMessage(doorState_t *state){
+
+    char *pTime = 0;
+
+    getParsableTime(*state, &pTime);
+    sendMessage(pTime);
+    free(pTime);
 }

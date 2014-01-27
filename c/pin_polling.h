@@ -25,6 +25,15 @@
 #define SLEEP 300
 #define DEFAULT_PIN 0
 
+//Initalize IO operations
+bool_t initIO();
+
+//Set pin to reading mode
+bool_t setPinReadMode(int pin);
+
+//Set pin to write mode
+bool_t setPinWriteMode(int pin);
+
 #else
 
 #define SLEEP 50000
@@ -34,14 +43,5 @@
 
 //Read in voltage level
 bool_t getCircuitState();
-
-//Initalize IO operations
-bool_t initIO();
-
-//Set pin to reading mode
-bool_t setPinReadMode(int pin);
-
-//Set pin to write mode
-bool_t setPinWriteMode(int pin);
 
 #endif //PIN_POLLING_H

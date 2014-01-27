@@ -25,15 +25,22 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <pthread.h>
 
+#define COM_SOCKET "/tmp/door_daemon_data_socket"
+
+//Message struct which is used to exchange messages between threads
+static sock_message_t g_ClientMessage;
 
 //Flag which denotes if a new message is ready to be sent
 static bool_t g_NewMessageReady = FALSE;
 
 //Flag which denotes if the thread shall continue
 static bool_t endThread = FALSE;
-static bool_t g_connectionClosed = TRUE;
+static bool_t threadRunning = FALSE;
 
+static pthread_mutex_t g_messageMutex;
+static pthread_mutex_t g_messageReadyFlagMutex;
 static pthread_mutex_t endThreadFlagMutex;
 
 /*Local function call prototypes*/
@@ -98,13 +105,22 @@ bool_t closeConnection(){
     return TRUE;
 }
 
-bool_t sendMessage(){
+bool_t sendMessage(char* msg){
+
+    pthread_mutex_lock(&g_messageMutex);
+    strcpy(g_ClientMessage.message, msg);
+    g_ClientMessage.msg_size = strlen(g_ClientMessage.message);
+    pthread_mutex_unlock(&g_messageMutex);
 
     pthread_mutex_lock(&g_messageReadyFlagMutex);
     g_NewMessageReady = TRUE;
     pthread_mutex_unlock(&g_messageReadyFlagMutex);
 
     return TRUE;
+}
+
+bool_t socketThreadRunning(){
+    return threadRunning;
 }
 
 void* socketWorker(void *threadID){
@@ -117,8 +133,11 @@ void* socketWorker(void *threadID){
 
     if( !createUNSocketConnection(&socketFD) ){
         debug(FTL, "%s\n", "Socket related error, ending thread!");
-        end = TRUE;
+        threadRunning = FALSE;
+        pthread_exit(NULL);
     }
+
+    threadRunning = TRUE;
 
     debug(DBG, "Thread with ID %ld started!\n", tid);
 
@@ -140,6 +159,7 @@ void* socketWorker(void *threadID){
             if( !transmitViaUNSocketConnection(&socketFD, &thread_msg) ){
                 debug(FTL, "%s\n", "Socket related error, ending thread!");
                 end = TRUE;
+                threadRunning = FALSE;
                 pthread_exit(NULL);
             }
 
@@ -158,6 +178,8 @@ void* socketWorker(void *threadID){
         debug(FTL, "%s\n", "Socket related error, ending thread!");
     }
 
+    threadRunning = FALSE;
+
     pthread_exit(NULL);
 }
 
@@ -166,7 +188,7 @@ static bool_t createUNSocketConnection(int *sockFd){
     struct sockaddr_un address;
 
     if( (*sockFd = socket(PF_LOCAL, SOCK_STREAM, 0)) < 1){
-        debug(FTL, "%s", "Error while initializing socket for UNIX Domain Socket connection!");
+        debug(FTL, "%s\n", "Error while initializing socket for UNIX Domain Socket connection!");
 		return FALSE;
 	}
 
@@ -174,7 +196,7 @@ static bool_t createUNSocketConnection(int *sockFd){
     strcpy(address.sun_path, COM_SOCKET);
 
     if( connect(*sockFd, (struct sockaddr*) &address, sizeof(address)) != 0 ){
-        debug(FTL, "%s", "Error while connecting to server!");
+        debug(FTL, "%s\n", "Error while connecting to server!");
         return FALSE;
     }
 

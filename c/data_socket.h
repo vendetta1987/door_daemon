@@ -15,27 +15,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TCP_SOCKET_H
-#define TCP_SOCKET_H
+#ifndef DATA_SOCKET_H
+#define DATA_SOCKET_H
 
 #include "app_types.h"
-
-#include <pthread.h>
-
-#define COM_SOCKET "/tmp/door_daemon_data_socket"
-
-//List of available mutexes for use in main and socket thread
-pthread_mutex_t g_messageMutex;
-pthread_mutex_t g_messageReadyFlagMutex;
-
-//Message struct which is used to exchange messages between threads
-sock_message_t g_ClientMessage;
 
 //Flag which denotes if a new message is ready to be sent
 //bool_t g_NewMessageReady = FALSE;
 
 bool_t createConnection();
-bool_t sendMessage();
+bool_t sendMessage(char* msg);
 bool_t closeConnection();
+bool_t socketThreadRunning();
 
-#endif //TCP_SOCKET_H
+#endif //DATA_SOCKET_H

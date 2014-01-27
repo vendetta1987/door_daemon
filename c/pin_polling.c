@@ -56,7 +56,6 @@ static void sighandler(int signo);
 #endif
 
 /*General Prototypes*/
-static void printDoorState(doorState_t *state);
 static void getParsableTime(doorState_t state, char **pTime);
 static void triggerEventMessage(doorState_t *state);
 
@@ -101,12 +100,6 @@ bool_t getCircuitState(){
 
         int level = digitalRead(DEFAULT_PIN);
 
-# ifdef DEBUG
-#  ifndef DAEMON
-        printDoorState(&door);
-#  else
-#  endif
-# endif
         if( level == 1 && door == OPEN){
 
             door = CLOSED;
@@ -226,17 +219,6 @@ void sighandler(int signo){
     end = 1;
 }
 #endif
-
-void printDoorState(doorState_t* state){
-    switch(*state){
-    case OPEN:
-        debug(DBG, "%s", "State: Open\n");
-        break;
-    case CLOSED:
-        debug(DBG, "%s", "State: Closed\n");
-        break;
-    }
-}
 
 void getParsableTime(doorState_t state, char** pTime){
 

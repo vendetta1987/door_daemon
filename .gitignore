@@ -1,0 +1,12 @@
+# python
+*.pyc
+
+# C
+*.o
+
+# Qt
+*.pro
+*.pro.user
+*.pro.user.*
+*.autosave
+

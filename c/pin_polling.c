@@ -62,6 +62,11 @@ static void triggerEventMessage(doorState_t *state);
 
 bool_t getCircuitState(){
 
+#if defined(DAEMON) && !defined(RPI)
+    debug(FTL, "%s\n", "Programm can not run as daemon on normal desktop Linux!");
+    return FALSE;
+#endif
+
     createConnection();
 
     /*

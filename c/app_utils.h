@@ -53,22 +53,22 @@ typedef eLogLevel loglevel_t;
     do{ if(DEBUG && lvl <= (gLogLevel ? gLogLevel : DEFAULT_LOG_LEVEL)) \
         switch(lvl){\
         case FTL:\
-            syslog(LOG_ALERT, "%s[%d]:%s() >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
+            syslog(LOG_ALERT, "%s[%d]:%s() - FATAL >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
         break;\
         case ERR:\
-            syslog(LOG_CRIT, "%s[%d]:%s() >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
+            syslog(LOG_CRIT, "%s[%d]:%s() - CRITICAL >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
         break;\
         case WRN:\
-            syslog(LOG_ERR, "%s[%d]:%s() >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
+            syslog(LOG_ERR, "%s[%d]:%s() - ERROR >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
         break;\
         case DBG:\
-            syslog(LOG_WARNING, "%s[%d]:%s() >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
+            syslog(LOG_WARNING, "%s[%d]:%s() - DEBUG >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
         break;\
         case TRC:\
-            syslog(LOG_NOTICE, "%s[%d]:%s() >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
+            syslog(LOG_NOTICE, "%s[%d]:%s() - NOTICE >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
         break;\
         case INF:\
-            syslog(LOG_INFO, "%s[%d]:%s() >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
+            syslog(LOG_INFO, "%s[%d]:%s() - INFO >> " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__);\
         break;\
         }\
         } while(0)

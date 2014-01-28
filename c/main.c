@@ -15,20 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Compiling commands
-//For normal use:
-//gcc main.c pin_polling.c data_socket.c -pthread -DDEBUG -std=gnu99 -Wall -g -o NAME
-//For use as daemon:
-//gcc main.c pin_polling.c data_socket.c -pthread -DDEBUG -DDAEMON -std=gnu99 -Wall -g -o NAME
-//For normal use on Raspberry Pi
-//gcc main.c pin_polling.c data_socket.c -pthread -lwiringPi -DDEBUG -DRPI -std=gnu99 -Wall -g -o NAME
-//For daemon use on Raspberry Pi
-//gcc main.c pin_polling.c data_socket.c -pthread -lwiringPi -DDEBUG -DRPI -DDAEMON -std=gnu99 -Wall -g -o NAME
-
 #ifdef DAEMON
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define LOCK_FILE "doord.lock"
 #define RUNNING_DIR "/tmp/"

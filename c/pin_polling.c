@@ -15,6 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unistd.h>
+
 #include "pin_polling.h"
 #include "data_socket.h"
 #include "app_utils.h"
@@ -28,7 +30,6 @@
 
 #else
 
-#include <unistd.h>
 #include <poll.h>
 #include <signal.h>
 #include <termios.h>

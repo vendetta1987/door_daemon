@@ -22,7 +22,7 @@
 
 #ifdef RPI
 
-#define SLEEP 300
+#define SLEEP 1000
 #define DEFAULT_PIN 0
 
 //Initalize IO operations

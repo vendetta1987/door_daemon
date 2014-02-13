@@ -3,6 +3,7 @@
 
 # C
 *.o
+*.h.gch
 
 # Qt
 *.pro
@@ -10,3 +11,5 @@
 *.pro.user.*
 *.autosave
 
+# Other
+todo.txt

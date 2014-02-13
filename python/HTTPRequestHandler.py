@@ -20,7 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import os
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
-import LogFileParser
+from LogFileParser import logFileParser
+from HTMLGenerator import LogfileToHTMLGenerator
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
 
@@ -45,19 +46,27 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_error(404, 'file not found')
         else:
             parser = LogFileParser.logFileParser()
+            generator = HTMLGenerator()
 
             try:
                 parser.openFile(self.m_logfile_path, "r")
                 parser.setPattern("^\{.*\}$")
                 list = parser.parseLogFile()
 
+                #Create frame
                 page = "<html>\n<head>\n</head>\n<body>\n"
 
                 print "Number of items: " + str(len(list))
 
+                #add content
+                page += generator.generateHTMLDivFromDoorStateObjectList(list, "stateList")
+
+                """
                 for item in list:
                     page += "<div>" + item.getState() + " - " + item.getDate() + " - " + item.getTime() + "</div>\n"
+                """
 
+                #finalize
                 page += "</body>\n</html>\n"
 
                 self.send_response(200)
@@ -89,5 +98,5 @@ class BasicHTMLServer(object):
 
 if __name__ == "__main__":
     server = BasicHTMLServer()
-    server.init('10.116.1.40', 8000)
+    server.init('10.116.1.200', 8000)
     server.run()

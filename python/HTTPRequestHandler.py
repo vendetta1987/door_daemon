@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
+import sys
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 from LogFileParser import logFileParser
@@ -45,24 +46,24 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             except IOError:
                 self.send_error(404, 'file not found')
         else:
-            parser = LogFileParser.logFileParser()
-            generator = HTMLGenerator()
+            parser = logFileParser()
+            generator = LogfileToHTMLGenerator()
 
             try:
                 parser.openFile(self.m_logfile_path, "r")
                 parser.setPattern("^\{.*\}$")
-                list = parser.parseLogFile()
+                mylist = parser.parseLogFile()
 
                 #Create frame
                 page = "<html>\n<head>\n</head>\n<body>\n"
 
-                print "Number of items: " + str(len(list))
+                print("Number of items: " + str(len(mylist)))
 
                 #add content
-                page += generator.generateHTMLDivFromDoorStateObjectList(list, "stateList")
+                page += generator.generateHTMLDivFromDoorStateObjectList(mylist, "stateList", "13/02/2014")
 
                 """
-                for item in list:
+                for item in mylist:
                     page += "<div>" + item.getState() + " - " + item.getDate() + " - " + item.getTime() + "</div>\n"
                 """
 
@@ -97,6 +98,21 @@ class BasicHTMLServer(object):
 
 
 if __name__ == "__main__":
-    server = BasicHTMLServer()
-    server.init('10.116.1.200', 8000)
-    server.run()
+
+	ip = ''
+	port = 0
+
+	print(sys.argv)
+
+	if len(sys.argv) == 3:
+		ip = sys.argv[1]
+		port = int(sys.argv[2])
+
+		print(ip)
+		print(port)
+	else:
+		print("not the required amount of arguments given!")
+	
+    	server = BasicHTMLServer()
+    	server.init(ip, port)
+    	server.run()

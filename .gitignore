@@ -11,5 +11,8 @@
 *.pro.user.*
 *.autosave
 
+# Vim
+*.swp
+
 # Other
 todo.txt

@@ -50,7 +50,7 @@ class LogfileToHTMLGenerator(AbstractHTMLGenerator):
     def init(self):
         pass
 
-    def generateDivHeader(self, def_id="def_id", def_class="def_class"):
+    def generateDivHeader(self, def_class="def_class", def_id="def_id"):
         header = "<div "
 
         if not def_class == "def_class":
@@ -77,7 +77,7 @@ class LogfileToHTMLGenerator(AbstractHTMLGenerator):
     """
     def generateDivContainer(self, content_string, def_id="def_id", def_class="def_class"):
 
-        div= self.generateDivHeader(def_id, def_class)
+        div= self.generateDivHeader(def_class, def_id)
 
         div += content_string
 
@@ -122,7 +122,24 @@ class LogfileToHTMLGenerator(AbstractHTMLGenerator):
     """
     def generateHTMLDivFromDoorStateObjectList(self, list, def_class="def_class", def_id_part="def_id_part"):
 
-        page_content = self.generateDivHeader(def_id, def_class)
+	divclass = ''
+	divid = ''
+
+	if def_class != "def_class":
+		divclass = def_class
+		
+		if def_id_part != "def_id_part":
+			divid = def_id_part
+			page_content = self.generateDivHeader(divclass, divid)
+			print("Got class and id!")
+		else:
+			page_content = self.generateDivHeader(divclass)
+			print("Got class only!")
+		
+	else:
+		page_content = self.generateDivHeader()
+		print("Got neither!")
+
         counter = 0
 
         for item in list:

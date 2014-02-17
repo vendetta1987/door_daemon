@@ -23,6 +23,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 from LogFileParser import logFileParser
 from HTMLGenerator import LogfileToHTMLGenerator
+from HTMLGenerator import LogfileToHTMLTableGenerator
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
 
@@ -47,7 +48,8 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_error(404, 'file not found')
         else:
             parser = logFileParser()
-            generator = LogfileToHTMLGenerator()
+            #generator = LogfileToHTMLGenerator()
+            generator = LogfileToHTMLTableGenerator()
 
             try:
                 parser.openFile(self.m_logfile_path, "r")

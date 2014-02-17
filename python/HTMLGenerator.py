@@ -61,13 +61,13 @@ class LogfileToHTMLTableGenerator(AbstractHTMLGenerator):
 
 		header += "border=" + border_thickness + ">"
 
-		header += "<thead><th>Status</th><th>Datum</th><th>Uhrzeit</th></thead>"
+                header += "<thead><th>Status</th><th>Datum</th><th>Uhrzeit</th></thead>\n"
 
 		return header
 
 	
 	def finalizeTable(self, table):
-		table += "</table>"
+                table += "</table>\n"
 		return table
 
 	def generateTableItemHeader(self, def_class="def_class", def_id="def_id"):
@@ -84,15 +84,15 @@ class LogfileToHTMLTableGenerator(AbstractHTMLGenerator):
 		return item
 
 	def finalizeTableItem(self, item):
-		item += "</td>"
+                item += "</td>\n"
 		return item
 	
 	def generateTableItem(self, content, item_class = "def_class", item_id="def_id"):
-		item = generateTableItemHeader(self, def_class, def_id)
+                item = self.generateTableItemHeader(item_class, item_id)
 
 		item += content
 
-		return finalizeTableItem(self, item)
+                return self.finalizeTableItem(item)
 
 	def generateHTMLFromDoorStateObject(self, item, def_id="def_id", def_class="def_class"):
 	
@@ -101,28 +101,28 @@ class LogfileToHTMLTableGenerator(AbstractHTMLGenerator):
 		if not def_id == "def_id":
 			id_part = def_id
 
-		table_item1 = generateTableItem(item.getState(), def_class, "State" + def_id)
-		table_item2 = generateTableItem(item.getDate(),  def_class, "Date" + def_id)
-		table_item3 = generateTableItem(item.getTime(),  def_class, "Time" + def_id)
+                table_item1 = self.generateTableItem(item.getState(), def_class, "State" + def_id)
+                table_item2 = self.generateTableItem(item.getDate(),  def_class, "Date" + def_id)
+                table_item3 = self.generateTableItem(item.getTime(),  def_class, "Time" + def_id)
 
 		items = [table_item1, table_item2, table_item3]
-		content_string = ""
-
+                content_string = "<tr>"
 		for item in items:
-			 content_string += finalizeTableItem(item)
+                         content_string += item
 
-		return content_string
+                content_string += "</tr>"
+                return content_string
 
 	def generateHTMLDivFromDoorStateObjectList(self, list, def_id_part="def_id_part", def_class="def_class"):
 
 		counter = 0
-		header = generateTableHeader(def_class, def_id_part)
+                header = self.generateTableHeader(def_class, def_id_part)
 
 		for item in list:
 			counter += 1
-			header += generateHTMLFromDoorStateObject(item, "DoorInfoObject", str(counter))
+                        header += self.generateHTMLFromDoorStateObject(item, "DoorInfoObject", str(counter))
 
-		return finalizeTable(header)
+                return self.finalizeTable(header)
 
 
 """

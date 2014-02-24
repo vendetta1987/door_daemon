@@ -52,32 +52,43 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             generator = LogfileToHTMLTableGenerator()
 
             try:
-                parser.openFile(self.m_logfile_path, "r")
-                parser.setPattern("^\{.*\}$")
-                mylist = parser.parseLogFile()
+                if self.path.endswith(".css"):
+                    f = open("../www/table_style_a.css")
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/css')
+                    self.end_headers()
+                    self.wfile.write(f.read())
+                    f.close()
+                    return
 
-                #Create frame
-                page = "<html>\n<head>\n</head>\n<body>\n"
+                elif self.path.endswith(".html") or self.path == "/":
+                    parser.openFile(self.m_logfile_path, "r")
+                    parser.setPattern("^\{.*\}$")
+                    mylist = parser.parseLogFile()
 
-                print("Number of items: " + str(len(mylist)))
+                    #Create html page
+                    page = """<html>
+                                <head>
+                                    <link rel=\"stylesheet\" type=\"text/css\" href=\"../www/table_style_a.css\">
+                                </head>
+                                <body>"""
 
-                #add content
-                page += generator.generateHTMLDivFromDoorStateObjectList(mylist, "stateList", "13/02/2014")
+                    #add content
+                    page += generator.generateHTMLDivFromDoorStateObjectList(mylist, "24/02/2014", "stateList")
 
-                """
-                for item in mylist:
-                    page += "<div>" + item.getState() + " - " + item.getDate() + " - " + item.getTime() + "</div>\n"
-                """
+                    #finalize
+                    page += """</body>
+                            </html>"""
 
-                #finalize
-                page += "</body>\n</html>\n"
-
-                self.send_response(200)
-                self.send_header('Content-type', 'text-html')
-                self.end_headers()
-                self.wfile.write(page)
-                parser.closeFile()
-                return
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(page)
+                    parser.closeFile()
+                    return
+                elif self.path.endswith(".js"):
+                    #Handle javascript
+                    return
             except IOError:
                 self.send_error(404, 'file not found')
 

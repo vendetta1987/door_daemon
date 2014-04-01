@@ -43,6 +43,25 @@ typedef enum{
 
 typedef eDoorStates doorState_t;
 
+//EXPERIMENTAL
+typedef enum{
+	DENIED = 0,
+	GRANTED = 1
+} eAccessStates;
+
+typedef eAccessStates accessState_t;
+
+/*Data struct for user credentials*/
+
+struct userData{
+	char* pUser;
+	doorState_t doorState;
+	accessState_t accessState; 
+}
+
+typedef userData userdata_t;
+//EXPERIMENTAL
+
 #ifndef RPI
 /*Globals*/
 static sig_atomic_t end = 0;
@@ -58,6 +77,10 @@ static void handlePinInterrupt(void);
 
 //door state variable for callback
 static doorState_t isr_doorState;
+
+//EXPERIMENTAL
+static userdata_t user;
+//EXPERIMENTAL
 
 bool_t getCircuitState(){
 

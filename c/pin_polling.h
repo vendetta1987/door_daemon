@@ -24,7 +24,7 @@
 
 #define SLEEP 1000
 #define DEFAULT_PIN 0
-
+#define GRANT_ACCESS_TIME 30 //Granted access time in seconds
 //Initalize IO operations
 bool_t initIO();
 
